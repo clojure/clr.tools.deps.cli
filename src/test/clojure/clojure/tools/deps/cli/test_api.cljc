@@ -9,36 +9,45 @@
     #?(:clj [clojure.tools.deps.util.maven :as mvn])
     [clojure.tools.deps.util.dir :as dir])
   (:import
-    [java.io File]))
+    #?(:clj [java.io File]
+	   :cljr [System.IO DirectoryInfo])))
 
-(def ^:dynamic ^File *test-dir*)
+(def ^:dynamic ^#?(:clj File :cljr DirectoryInfo) *test-dir*)
 
 (defmacro with-test-dir
   [& body]
   `(let [name# (-> test/*testing-vars* last symbol str)
-         dir# (jio/file "test-out" name#)]
-     (.delete dir#)
-     (.mkdirs dir#)
+         dir# (#?(:clj jio/file :cljr cio/dir-info) "test-out" name#)]
+     (#?(:clj .delete :cljr .Delete) dir#)
+     (#?(:clj .mkdirs :cljr .Create) dir#)
      (binding [*test-dir* dir#]
        ~@body)))
 
 (deftest test-prep-with-aliases
   (with-test-dir
-    (let [p1deps (jio/file *test-dir* "p1/deps.edn")
-          p2deps (jio/file *test-dir* "p2/deps.edn")]
+    (let [p1deps (#?(:clj jio/file  :cljr cio/file-info) *test-dir* "p1/deps.edn")
+          p2deps (#?(:clj jio/file  :cljr cio/file-info) *test-dir* "p2/deps.edn")]
 
       ;; set up p1 with an alias that, if used, pulls p2
-      (jio/make-parents p1deps)
+      #?(:clj (jio/make-parents p1deps)
+	     :cljr (.Create (.Directory p1deps)))
       (spit p1deps
             (pr-str {:aliases {:x {:extra-deps {'foo/bar {:local/root "../p2"}}}}}))
 
       ;; set up p2 to prep
-      (jio/make-parents p2deps)
-      (spit (jio/file *test-dir* "p2/build.clj")
-            "(ns build
-               (:require [clojure.java.io :as jio]))
-             (defn prep [_]
-               (jio/make-parents \"prepped/out\"))")
+      #?(:clj (jio/make-parents p2deps)
+	     :cljr (.Create (.Directory p2deps)))
+      #?(:clj (spit (jio/file *test-dir* "p2/build.clj")
+                    "(ns build
+                       (:require [clojure.java.io :as jio]))
+                     (defn prep [_]
+                       (jio/make-parents \"prepped/out\"))")
+		 :cljr (spit (cio/file-info *test-dir*  "p2/build.clj")
+	                    "(ns build
+                       (:require [clojure.clr.io :as cio]))
+                     (defn prep [_]
+                       (.Create (cio/dir-info \"prepped/out\")))")
+        )					   
       (spit p2deps
             (pr-str {:deps/prep-lib {:ensure "prepped"
                                      :alias :build
@@ -46,16 +55,20 @@
                      :aliases {:build {:ns-default 'build}}}))
 
       ;; prep p1 with aliases
-      (dir/with-dir (jio/file *test-dir* "p1")
+      (dir/with-dir #?(:clj (jio/file *test-dir* "p1")
+	                   :cljr (cio/file-info *test-dir* "p1"))
         (api/prep
-         {:root {:mvn/repos mvn/standard-repos}
+         {#?(:clj :root) #?(:clj {:mvn/repos mvn/standard-repos})
           :user nil
           :project :standard
           :aliases [:x]
           :force true}))
 
       ;; check that it prepped p2
-      (is (true? (.exists (jio/file *test-dir* "p2/prepped")))))))
+      #?(:clj (is (true? (.exists (jio/file *test-dir* "p2/prepped"))))
+	     :cljr (is (true? (.Exists (cio/file-info *test-dir* "p2/prepped")))))
+	  
+	  )))
 
 
 (deftest test-prep-across-modules

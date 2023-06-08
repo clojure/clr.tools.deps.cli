@@ -120,7 +120,7 @@
         :edn (pprint/pprint tree)
         (throw (ex-info (str "Unknown format " format) {}))))
     (catch #?(:clj Throwable :cljr Exception) t
-      (printerrln "Error generating tree:" (#?(:clj .getMessage :cljr Message) t))
+      (printerrln "Error generating tree:" (#?(:clj .getMessage :cljr .Message) t))
       (when-not (instance? IExceptionInfo t)
         #?(:clj (.printStackTrace t)
 		   :cljr (System.Console/WriteLine (.StackTrace t))))
