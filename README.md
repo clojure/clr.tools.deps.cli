@@ -13,7 +13,7 @@ The current release is 0.1.1.
 
 [CLI/`deps.edn`](https://clojure.org/reference/deps_edn) dependency information:
 ```clojure
-io.github.clojure/clr.tools.deps.cli {:git/tag "v0.1.1" :git/sha "865bdf2" }
+io.github.clojure/clr.tools.deps.cli {:git/tag "v0.1.1" :git/sha "9b26e93" }
 ```
 
 ## License
