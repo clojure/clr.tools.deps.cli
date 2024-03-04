@@ -8,12 +8,12 @@ See that repository for documentation.
 
 This library is at an alpha stage, under active development.
 
-The current release is 0.1.1.
+The current release is 0.1.2.
 
 
 [CLI/`deps.edn`](https://clojure.org/reference/deps_edn) dependency information:
 ```clojure
-io.github.clojure/clr.tools.deps.cli {:git/tag "v0.1.1" :git/sha "9b26e93" }
+io.github.clojure/clr.tools.deps.cli {:git/tag "v0.1.2" :git/sha "8b4c25e" }
 ```
 
 ## License
