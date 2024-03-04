@@ -187,12 +187,10 @@
     (-> "clojure/tools/deps/license-abbrev.edn" jio/resource slurp edn/read-string)))
 	
 :cljr
-
-;; TODO: Figure out what the equivalent is!
 (def ^:private license-abbrev
-  (delay
-    (-> "clojure/tools/deps/license-abbrev.edn" #_jio/resource slurp edn/read-string)))
-	
+  (delay  
+    (letfn [(find-file [x] (clojure.lang.RT/FindFile x))]
+      (-> "clojure/tools/deps/license-abbrev.edn" find-file slurp edn/read-string))))
 )
 
 (defn- license-string
