@@ -6,9 +6,7 @@ See that repository for documentation.
 
 # Release
 
-This library is at an alpha stage, under active development.
-
-The current release is 0.1.2.
+The current release is 0.1.3.
 
 
 [CLI/`deps.edn`](https://clojure.org/reference/deps_edn) dependency information:
