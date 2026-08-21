@@ -310,7 +310,8 @@
          :artifact-id (.getArtifactId model)
          :version (.getVersion model)
          :pom-file pom})
-      (throw (FileNotFoundException. (str "Pom file not found: " (str pom)))))))
+      (throw (FileNotFoundException. (str "Pom file not found: " pom))))))
+	  
 )
 
 #?(

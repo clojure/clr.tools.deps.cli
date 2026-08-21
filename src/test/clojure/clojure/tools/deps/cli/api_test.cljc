@@ -12,13 +12,15 @@
     #?(:clj [java.io File]
 	   :cljr [System.IO DirectoryInfo])))
 
-(def ^:dynamic ^#?(:clj File :cljr DirectoryInfo) *test-dir*)
+(def ^:dynamic ^#?(:clj File :cljr DirectoryInfo) *test-dir* nil)
 
 (defmacro with-test-dir
   [& body]
   `(let [name# (-> test/*testing-vars* last symbol str)
          dir# (#?(:clj jio/file :cljr cio/dir-info) "test-out" name#)]
-     (#?(:clj .delete :cljr .Delete) dir#)
+     (try                                                                   ;;; Had to add the try block because the CLR .Delete can throw
+	   (#?(:clj .delete :cljr .Delete) dir#)
+	   (catch Exception e# nil))
      (#?(:clj .mkdirs :cljr .Create) dir#)
      (binding [*test-dir* dir#]
        ~@body)))
@@ -50,6 +52,7 @@
 
       ;; set up p2 to prep
       (make-parents p2deps)
+	  (println "*test-dir*: " (.FullName *test-dir*))
       #?(:clj (spit (get-file-info *test-dir* "p2/build.clj")
                     "(ns build
                        (:require [clojure.java.io :as jio]))
@@ -59,6 +62,7 @@
 	                    "(ns build
                        (:require [clojure.clr.io :as cio]))
                      (defn prep [_]
+					   (println \"Made it\")
                        (.Create (cio/dir-info \"prepped/out\")))")
         )					   
       (spit p2deps
@@ -70,7 +74,7 @@
       ;; prep p1 with aliases
       (dir/with-dir (get-file-info *test-dir* "p1")
         (api/prep
-         {#?(:clj :root) #?(:clj {:mvn/repos mvn/standard-repos})
+         {:root #?(:clj {:mvn/repos mvn/standard-repos} :cljr :standard)
           :user nil
           :project :standard
           :aliases [:x]
