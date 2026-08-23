@@ -28,6 +28,9 @@
 (defn get-file-info [dirname filename]
    (#?(:cljr cio/file-info :clj jio/file) dirname filename))	   
    
+(defn get-dir-info [dirname filename]
+   (#?(:cljr cio/dir-info :clj jio/file) dirname filename))	    
+   
 #?(
 :clj   
 (defn make-parents [dir]
@@ -38,6 +41,19 @@
   (.Create (.Directory file-path)))
 
 )
+
+(deftest test-aliases-with-non-map-data
+  (with-test-dir
+    (let [p1deps (get-file-info *test-dir* "p1/deps.edn")]
+      (make-parents p1deps)
+      (spit p1deps
+        (pr-str {:aliases {:foo ["some" "data"]}}))
+
+      (dir/with-dir (get-dir-info *test-dir* "p1")
+        (let [output (with-out-str (api/aliases {:user nil}))]
+          (is (str/includes? output ":deps"))
+          (is (not (str/includes? output ":foo"))))))))
+
   
  ;;; NEED TO FIGURE OUT HOW TO PORT THIS TEST 
 #_(deftest test-prep-with-aliases
@@ -72,7 +88,7 @@
                      :aliases {:build {:ns-default 'build}}}))
 
       ;; prep p1 with aliases
-      (dir/with-dir (get-file-info *test-dir* "p1")
+      (dir/with-dir (get-dir-info *test-dir* "p1")
         (api/prep
          {:root #?(:clj {:mvn/repos mvn/standard-repos} :cljr :standard)
           :user nil
@@ -81,8 +97,8 @@
           :force true}))
 
       ;; check that it prepped p2
-      #?(:clj (is (true? (.exists (get-file-info *test-dir* "p2/prepped"))))
-	     :cljr (is (true? (.Exists (cio/file-info *test-dir* "p2/prepped")))))
+      #?(:clj (is (true? (.exists (jio/file *test-dir* "p2/prepped"))))
+	     :cljr (is (true? (.Exists (cio/dir-info *test-dir* "p2/prepped")))))
 	  
 	  )))
 
