@@ -1,5 +1,6 @@
 (ns clojure.tools.deps.cli.api-test
   (:require
+    [clojure.edn :as edn]
     #?(:clj [clojure.java.io :as jio]
 	   :cljr [clojure.clr.io :as cio])
     [clojure.string :as str]
@@ -232,6 +233,17 @@
     (is (str/includes? s "v0.8.2")))
 
   (is (= "" (with-out-str (api/find-versions {:lib 'io.github.clojure/bogus-taco-slurpee})))))
+
+(deftest test-find-versions-returns-results-from-all-procurers
+  (let [expected [[:git/tag :git/sha] #?(:clj [:mvn/version])]
+        actual (->> (api/find-versions {:lib 'io.github.clojure/tools.build :n 4})
+                    with-out-str
+                    str/split-lines
+                    (map edn/read-string)
+                    (group-by keys)
+                    keys)]
+    (is (= expected actual))))
+
 
 (comment
   (test-find-maven-version)
