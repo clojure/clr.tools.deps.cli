@@ -19,9 +19,15 @@
   [& body]
   `(let [name# (-> test/*testing-vars* last symbol str)
          dir# (#?(:clj jio/file :cljr cio/dir-info) "test-out" name#)]
-     (try                                                                   ;;; Had to add the try block because the CLR .Delete can throw
-	   (#?(:clj .delete :cljr .Delete) dir#)
-	   (catch Exception e# nil))
+     
+	 #?(
+	   :clj (.delete dir#)
+	   :cljr 
+	   (try (.Delete dir# true)
+	      (catch Exception e# 
+		    (println "Failure deleting test-out folder: " (.Message e#))
+			nil))
+		)
      (#?(:clj .mkdirs :cljr .Create) dir#)
      (binding [*test-dir* dir#]
        ~@body)))
@@ -56,8 +62,7 @@
           (is (not (str/includes? output ":foo"))))))))
 
   
- ;;; NEED TO FIGURE OUT HOW TO PORT THIS TEST 
-#_(deftest test-prep-with-aliases
+(deftest test-prep-with-aliases
   (with-test-dir
     (let [p1deps (get-file-info *test-dir* "p1/deps.edn")
           p2deps (get-file-info *test-dir* "p2/deps.edn")]
@@ -69,7 +74,6 @@
 
       ;; set up p2 to prep
       (make-parents p2deps)
-	  (println "*test-dir*: " (.FullName *test-dir*))
       #?(:clj (spit (get-file-info *test-dir* "p2/build.clj")
                     "(ns build
                        (:require [clojure.java.io :as jio]))
@@ -79,7 +83,6 @@
 	                    "(ns build
                        (:require [clojure.clr.io :as cio]))
                      (defn prep [_]
-					   (println \"Made it\")
                        (.Create (cio/dir-info \"prepped/out\")))")
         )					   
       (spit p2deps
