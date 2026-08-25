@@ -6,7 +6,7 @@ See that repository for documentation.
 
 # Release
 
-The current release is 0.1.7.
+The current release is 0.31.158
 
 
 [CLI/`deps.edn`](https://clojure.org/reference/deps_edn) dependency information:
