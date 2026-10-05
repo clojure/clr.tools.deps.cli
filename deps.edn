@@ -1,6 +1,6 @@
 {
  :paths ["src/main/clojure"]
- :deps { io.github.clojure/clr.tools.deps {:git/tag "v0.31.1645" :git/sha "ac3c0d6"}}
+ :deps { io.github.clojure/clr.tools.deps {:git/tag "v0.31.1646" :git/sha "f664fee"}}
    :aliases
    {:test
      {:extra-paths ["src/test/clojure"]
